@@ -1,0 +1,9 @@
+{
+  "name": "auto-dark-mode",
+  "version": "0.0.1",
+  "description": "Automatically switches between the light and dark editor themes based on the current time.\nIt even supports automatically getting the current sunrise & sunset times based on provided longitude and latitude.\n\nTo enable and configure, go to the settings menu.",
+  "author": "Ruben O.",
+  "license": "MIT",
+  "displayName": "Auto Dark Mode",
+  "unity": "2020.1"
+}
