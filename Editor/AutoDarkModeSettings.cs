@@ -41,15 +41,19 @@ namespace Packages.AutoDarkMode
         public bool EnableAutoDarkMode;
 
         [SerializeField, HideInInspector]
-        public bool UseCoordinates;
-
-        [SerializeField, HideInInspector]
         public Vector2 Geolocation;
 
         [SerializeField, HideInInspector]
         public bool AutoFetchSunriseSunsetTimes;
         [SerializeField, HideInInspector]
-        public int FetchTimeout;
+        public int FetchTimeout = 10;
+        [SerializeField, HideInInspector]
+        private string _lastAutoFetchTime;
+        public DateTime LastAutoFetchTime
+        {
+            get => DateTime.TryParse(_lastAutoFetchTime, out var value) ? value : default;
+            set => _lastAutoFetchTime = value.ToString();
+        }
 
         public TimeSpan Sunrise => Convert.ToDateTime(_sunrise).TimeOfDay;
         [SerializeField, HideInInspector]
@@ -66,14 +70,14 @@ namespace Packages.AutoDarkMode
         {
             var settings = GetSerializedSettings();
             EditorGUILayout.PropertyField(settings.FindProperty(nameof(EnableAutoDarkMode)),
-                new GUIContent("Enable Dark Mode"));
+                new GUIContent("Enable Auto Dark Mode"));
 
-            var useCoordinates = settings.FindProperty(nameof(UseCoordinates));
+            var autoFetchCoordinates = settings.FindProperty(nameof(AutoFetchSunriseSunsetTimes));
             EditorGUILayout.LabelField(
                 "Automatically fetch Sunrise & Sunset time from a server based on longitude and latitude?");
-            EditorGUILayout.PropertyField(useCoordinates, new GUIContent("Auto Fetch"));
+            EditorGUILayout.PropertyField(autoFetchCoordinates, new GUIContent("Auto Fetch"));
 
-            if (useCoordinates.boolValue)
+            if (autoFetchCoordinates.boolValue)
             {
                 EditorGUILayout.PropertyField(settings.FindProperty(nameof(Geolocation)),
                     new GUIContent("Longitude/Latitude"));
@@ -84,18 +88,8 @@ namespace Packages.AutoDarkMode
                 if (GUILayout.Button("Fetch Sunrise/Sunset times from API"))
                 {
                     EditorUtility.DisplayProgressBar("Auto Dark Mode", "Fetching Sunrise/Sunset from API..", 0f);
-                    SunriseSunsetApi.FetchData(
-                        Instance.Geolocation.x,
-                        Instance.Geolocation.y,
-                        Instance.FetchTimeout,
-                        (sunrise, sunset) =>
-                        {
-                            EditorUtility.ClearProgressBar();
-                            Instance._sunrise = sunrise.ToString();
-                            Instance._sunset = sunset.ToString();
-                            EditorUtility.SetDirty(Instance);
-                        },
-                        EditorUtility.ClearProgressBar);
+                    Action onError = EditorUtility.ClearProgressBar;
+                    FetchSunriseSunsetData(EditorUtility.ClearProgressBar, onError);
                 }
 
                 GUILayout.Label("Uses https://sunrise-sunset.org - thanks!");
@@ -112,6 +106,22 @@ namespace Packages.AutoDarkMode
             {
                 settings.ApplyModifiedProperties();
             }
+        }
+
+        public static void FetchSunriseSunsetData(Action onComplete, Action onError)
+        {
+            SunriseSunsetApi.FetchData(
+                Instance.Geolocation.x,
+                Instance.Geolocation.y,
+                Instance.FetchTimeout,
+                (sunrise, sunset) =>
+                {
+                    Instance._sunrise = sunrise.ToString();
+                    Instance._sunset = sunset.ToString();
+                    EditorUtility.SetDirty(Instance);
+                    onComplete?.Invoke();
+                },
+                onError);
         }
     }
 }
