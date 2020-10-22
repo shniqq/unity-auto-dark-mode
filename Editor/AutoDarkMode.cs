@@ -9,24 +9,55 @@ namespace Packages.AutoDarkMode
     {
         public const int ProSkinIndex = 1;
         public const int DefaultSkinIndex = 0;
-        
+
         [InitializeOnLoadMethod]
         public static void OnInit()
         {
             ShowWelcomeMessage();
-            
+
             var settings = AutoDarkModeSettings.Instance;
             if (!settings.EnableAutoDarkMode)
             {
                 if (settings.ShowExtraLogs)
                 {
-                    Debug.Log($"Skipping Auto Dark Mode check since {nameof(settings.EnableAutoDarkMode)} is set to false!");
+                    Debug.Log(
+                        $"Skipping Auto Dark Mode check since {nameof(settings.EnableAutoDarkMode)} is set to false!");
                 }
+
                 return;
             }
 
+            if (settings.AutoFetchSunriseSunsetTimes)
+            {
+                var timeSinceLastFetch = DateTime.UtcNow - settings.LastAutoFetchTime;
+                if (timeSinceLastFetch > Constants.AutoFetchInterval)
+                {
+                    AutoDarkModeSettings.FetchSunriseSunsetData(
+                        () =>
+                        {
+                            settings.LastAutoFetchTime = DateTime.UtcNow;
+                            EditorUtility.SetDirty(AutoDarkModeSettings.Instance);
+                            SetEditorTheme(settings);
+                        },
+                        () => { }
+                    );
+                }
+                else if(settings.ShowExtraLogs)
+                {
+                    Debug.Log(
+                        $"Skipping auto fetching sunrise/sunset data since time of last fetch is only {timeSinceLastFetch.ToString()}.");
+                }
+            }
+
+            SetEditorTheme(settings);
+        }
+
+        private static void SetEditorTheme(AutoDarkModeSettings settings)
+        {
             var timeNowUtc = DateTime.UtcNow.TimeOfDay;
-            if (timeNowUtc > settings.Sunrise && timeNowUtc < settings.Sunset)
+            var sunset = settings.Sunset;
+            var sunrise = settings.Sunrise;
+            if (timeNowUtc > sunrise && timeNowUtc < sunset)
             {
                 if (settings.ShowExtraLogs)
                 {
@@ -44,6 +75,7 @@ namespace Packages.AutoDarkMode
                 {
                     Debug.Log("It's night, bring out the dark UI!");
                 }
+
                 if (GetCurrentSkinIndex() == DefaultSkinIndex)
                 {
                     ToggleSkin();
@@ -76,9 +108,9 @@ namespace Packages.AutoDarkMode
                 return 0;
             }
 
-            return (int)propertyInfo.GetMethod.Invoke(null, new object[]{});
+            return (int) propertyInfo.GetMethod.Invoke(null, new object[] { });
         }
-        
+
         public static void ToggleSkin()
         {
             const string internalSwitchSkinMethodName = "Internal_SwitchSkin";
