@@ -1,16 +1,16 @@
 ![AutoDarkMode](ADM_Preferences_Screenshot.png)
 
-##Requirements
+## Requirements
 * Unity version 2020.1 or newer
 * `Api Compatibility Level` needs to be `.NET 4.x` or `.NET Core 2.0`
 
-##Features
+## Features
 
 * Automatically toggles between the light and dark editor themes based on your current local time using
     * ... either a custom sunrise and sunset time you entered
     * ... or a automatically fetched sunrise and sunset time based on the longitude & latitude you entered
 
-##Getting Started
+## Getting Started
 
 Head over to your Preferences window and go to `Project/Auto Dark Mode`, here you can configure the following options:
 
@@ -23,17 +23,17 @@ Head over to your Preferences window and go to `Project/Auto Dark Mode`, here yo
 
 _* All times are in UTC._
 
-##What will it add/do to my project?
+## What will it add/do to my project?
 
 * Besides the actual plugin code it will create a config file (`Assets/AutoDarkModeSettings.asset`) to store the users settings when opening the settings for the first time. It is recommended to add this to your `.gitignore` as this plugin is supposed to be configurable on a per-user level so each user needs to have their own copy.
 * The plugin will hook into the [`InitializeOnLoadMethod`][1] flow and try to decide if a switch of the editor theme is required and do so if needed.
 
-##Known Issues
+## Known Issues
 * Editor Theme is not applied on a per-project level: This is something Unity has to change, unfortunately the Editor theme is a global setting and can't be changed on a per-project level.
 
 If you notice anything else that might be wrong, file an (issue)[https://github.com/shniqq/unity-auto-dark-mode/issues].
 
-##Improvement Ideas
+## Improvement Ideas :bulb:
 * A way to automatically detect the user's location (long/lat). A rough estimate should be just fine to get good-enough approximations for the sunrise & sunset times.
 * Automatically open Project Settings when plugin is added for the first time or provide a button in the welcome popup to go there.
 * Add option to invert the theme (light during the night, dark during the day). Not sure if this is something someone actually wants?
