@@ -8,16 +8,16 @@ namespace Packages.AutoDarkMode
     {
         public const string ApiUrl = "http://ip-api.com/json/";
 
-        public static void FetchData(int timeout, Action<float, float> onFetchedLongLat, Action onError)
+        public static void FetchData(int timeout, Action<float, float, string> onFetchedLocation, Action onError)
         {
             var request = UnityWebRequest.Get(ApiUrl);
             request.timeout = timeout;
             var requestOperation = request.SendWebRequest();
-            requestOperation.completed += _ => OnResponseReceived(onFetchedLongLat, onError, request);
+            requestOperation.completed += _ => OnResponseReceived(onFetchedLocation, onError, request);
         }
 
         private static void OnResponseReceived(
-            Action<float, float> onFetchedLongLat,
+            Action<float, float, string> onFetchedLocation,
             Action onError,
             UnityWebRequest request)
         {
@@ -48,7 +48,7 @@ namespace Packages.AutoDarkMode
                     Debug.Log($"Success. Found Longitude {apiResponse.lon} and Latitude {apiResponse.lat}.");
                 }
 
-                onFetchedLongLat?.Invoke((float) apiResponse.lon, (float) apiResponse.lat);
+                onFetchedLocation?.Invoke((float) apiResponse.lon, (float) apiResponse.lat, apiResponse.city);
             }
             catch (Exception e)
             {

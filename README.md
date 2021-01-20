@@ -1,7 +1,7 @@
 ![AutoDarkMode](ADM_Preferences_Screenshot.png)
 
 ## Requirements
-* Unity version 2020.1 or newer
+* Unity version 2020.1 or newer (last updated with 2020.2.1f1)
 * `Api Compatibility Level` needs to be `.NET 4.x` or `.NET Core 2.0`
 
 ## Features
@@ -15,11 +15,11 @@
 Head over to your Preferences window and go to `Project/Auto Dark Mode`, here you can configure the following options:
 
 * `Enable Auto Dark Mode`: If this is checked, the plugin will compare your _local time_* to the `Sunrise` and `Sunset` options (see below) and turn on the respective theme.
-* `Auto Fetch`: If checked, the plugin will try to fetch and auto fill the `Sunrise` and `Sunset` options (see below) using the [sunrise-sunset.org API](https://sunrise-sunset.org/api) once a day.
-    * `Longitude/Latitude` (only shown if `Auto Fetch` is enabled): Fill in the longitude and latitude of your location (e.g. 52.52 and 13.4050 for Berlin, Germany). Don't need to be super accurate.
-    * `Fetch Sunrise/Sunset times from API` (only shown if `Auto Fetch` is enabled): Force a fetch of the `Sunrise` and `Sunset` options (see below) now.
+* `Auto Fetch`: If checked, the plugin will try to fetch and auto fill the `Sunrise`, `Sunset`, `Longitude` and `Latitude` options (see below) using [http://ip-api.com/json/](https://ip-api.com/docs/api:json) and [sunrise-sunset.org API](https://sunrise-sunset.org/api) once a day.
+* `Fetch now` and `Fetch Timeout`: Force a fetch of the `Sunrise` and `Sunset` options (see below) now.
+    * `Rough Location` and `Longitude/Latitude` (only shown if `Auto Fetch` is enabled): Fill in the longitude and latitude of your location (e.g. 52.52 and 13.4050 for Berlin, Germany). Does not need to be super accurate. This usually filled in automatically.
 * `Sunrise` and `Sunset`: The _times_* when sunrise and sunset occur/when Auto Dark Mode should switch the editor theme. If `Auto Fetch` is enabled, these fields should be populated for you automatically, otherwise you have to enter them manually*.
-* `Show Extra Logs`: Show some logs to know whats going on behind the scenes.
+* `Show Extra Logs`: Show some logs to know what's going on behind the scenes.
 
 _* All times are in UTC._
 
@@ -34,7 +34,7 @@ _* All times are in UTC._
 If you notice anything else that might be wrong, file an (issue)[https://github.com/shniqq/unity-auto-dark-mode/issues].
 
 ## Improvement Ideas :bulb:
-* A way to automatically detect the user's location (long/lat). A rough estimate should be just fine to get good-enough approximations for the sunrise & sunset times.
+* :white_check_mark: ~~A way to automatically detect the user's location (long/lat). A rough estimate should be just fine to get good-enough approximations for the sunrise & sunset times.~
 * Automatically open Project Settings when plugin is added for the first time or provide a button in the welcome popup to go there.
 * Add option to invert the theme (light during the night, dark during the day). Not sure if this is something someone actually wants?
 * Provide sensible default values for `Sunset` and `Sunrise` so the plugin works out of the box.

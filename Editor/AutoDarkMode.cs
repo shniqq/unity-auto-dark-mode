@@ -37,7 +37,7 @@ namespace Packages.AutoDarkMode
                         {
                             settings.LastAutoFetchTime = DateTime.UtcNow;
                             EditorUtility.SetDirty(AutoDarkModeSettings.Instance);
-                            SetEditorTheme(settings);
+                            SetEditorTheme();
                         },
                         () =>
                         {
@@ -48,18 +48,19 @@ namespace Packages.AutoDarkMode
                         }
                     );
                 }
-                else if(settings.ShowExtraLogs)
+                else if (settings.ShowExtraLogs)
                 {
                     Debug.Log(
                         $"Skipping auto fetching sunrise/sunset data since time of last fetch is only {timeSinceLastFetch.ToString()}.");
                 }
             }
 
-            SetEditorTheme(settings);
+            SetEditorTheme();
         }
 
-        private static void SetEditorTheme(AutoDarkModeSettings settings)
+        public static void SetEditorTheme()
         {
+            var settings = AutoDarkModeSettings.Instance;
             var timeNowUtc = DateTime.UtcNow.TimeOfDay;
             var sunset = settings.Sunset;
             var sunrise = settings.Sunrise;
