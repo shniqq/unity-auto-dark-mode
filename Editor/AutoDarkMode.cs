@@ -27,19 +27,25 @@ namespace Packages.AutoDarkMode
                 return;
             }
 
-            if (settings.AutoFetchSunriseSunsetTimes)
+            if (settings.AutoFetch)
             {
                 var timeSinceLastFetch = DateTime.UtcNow - settings.LastAutoFetchTime;
                 if (timeSinceLastFetch > Constants.AutoFetchInterval)
                 {
-                    AutoDarkModeSettings.FetchSunriseSunsetData(
+                    AutoDarkModeSettings.FetchAll(
                         () =>
                         {
                             settings.LastAutoFetchTime = DateTime.UtcNow;
                             EditorUtility.SetDirty(AutoDarkModeSettings.Instance);
                             SetEditorTheme(settings);
                         },
-                        () => { }
+                        () =>
+                        {
+                            if (settings.ShowExtraLogs)
+                            {
+                                Debug.Log("Failed to auto-fetch.");
+                            }
+                        }
                     );
                 }
                 else if(settings.ShowExtraLogs)

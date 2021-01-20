@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using UnityEditor;
 using UnityEngine;
 
@@ -44,7 +45,7 @@ namespace Packages.AutoDarkMode
         public Vector2 Geolocation;
 
         [SerializeField, HideInInspector]
-        public bool AutoFetchSunriseSunsetTimes;
+        public bool AutoFetch;
         [SerializeField, HideInInspector]
         public int FetchTimeout = 10;
         [SerializeField, HideInInspector]
@@ -52,7 +53,7 @@ namespace Packages.AutoDarkMode
         public DateTime LastAutoFetchTime
         {
             get => DateTime.TryParse(_lastAutoFetchTime, out var value) ? value : default;
-            set => _lastAutoFetchTime = value.ToString();
+            set => _lastAutoFetchTime = value.ToString(CultureInfo.InvariantCulture);
         }
 
         public TimeSpan Sunrise => Convert.ToDateTime(_sunrise).TimeOfDay;
@@ -72,28 +73,33 @@ namespace Packages.AutoDarkMode
             EditorGUILayout.PropertyField(settings.FindProperty(nameof(EnableAutoDarkMode)),
                 new GUIContent("Enable Auto Dark Mode"));
 
-            var autoFetchCoordinates = settings.FindProperty(nameof(AutoFetchSunriseSunsetTimes));
+            var autoFetchCoordinates = settings.FindProperty(nameof(AutoFetch));
             EditorGUILayout.LabelField(
-                "Automatically fetch Sunrise & Sunset time from a server based on longitude and latitude?");
+                "Automatically fetch Sunrise & Sunset times from a server based on your current IP?");
             EditorGUILayout.PropertyField(autoFetchCoordinates, new GUIContent("Auto Fetch"));
 
             if (autoFetchCoordinates.boolValue)
             {
+                GUILayout.BeginHorizontal();
+                var refreshIcon = EditorGUIUtility.IconContent("d_Refresh");
+                var buttonContent = new GUIContent("Fetch", refreshIcon.image,
+                    "Fetches first the long/lat based on your IP, and then the sunrise and sunset based on the long/lat.");
+                if (GUILayout.Button(buttonContent))
+                {
+                    EditorUtility.DisplayProgressBar("Auto Dark Mode", "Fetching Long/Lat from API..", 0f);
+                    Action onError = EditorUtility.ClearProgressBar;
+                    FetchAll(EditorUtility.ClearProgressBar, onError);
+                }
+
+                GUILayout.EndHorizontal();
+                
+                GUILayout.Box(
+                    $"Uses {IpApi.ApiUrl} to fetch your approximate longitude and latitude based on your IP and {SunriseSunsetApi.ApiUrl} to fetch sunrise and sunset based on longitude and latitude.");
+
                 EditorGUILayout.PropertyField(settings.FindProperty(nameof(Geolocation)),
                     new GUIContent("Longitude/Latitude"));
                 EditorGUILayout.PropertyField(settings.FindProperty(nameof(FetchTimeout)),
                     new GUIContent("Fetch Timeout"));
-
-                GUILayout.BeginHorizontal();
-                if (GUILayout.Button("Fetch Sunrise/Sunset times from API"))
-                {
-                    EditorUtility.DisplayProgressBar("Auto Dark Mode", "Fetching Sunrise/Sunset from API..", 0f);
-                    Action onError = EditorUtility.ClearProgressBar;
-                    FetchSunriseSunsetData(EditorUtility.ClearProgressBar, onError);
-                }
-
-                GUILayout.Label("Uses https://sunrise-sunset.org - thanks!");
-                GUILayout.EndHorizontal();
             }
 
             EditorGUILayout.PropertyField(settings.FindProperty(nameof(_sunrise)), new GUIContent("Sunrise"));
@@ -108,7 +114,7 @@ namespace Packages.AutoDarkMode
             }
         }
 
-        public static void FetchSunriseSunsetData(Action onComplete, Action onError)
+        private static void FetchSunriseSunsetData(Action onComplete, Action onError)
         {
             SunriseSunsetApi.FetchData(
                 Instance.Geolocation.x,
@@ -122,6 +128,21 @@ namespace Packages.AutoDarkMode
                     onComplete?.Invoke();
                 },
                 onError);
+        }
+
+        private static void FetchLongLatData(Action onComplete, Action onError)
+        {
+            IpApi.FetchData(Instance.FetchTimeout, (longitude, latitude) =>
+            {
+                Instance.Geolocation = new Vector2(longitude, latitude);
+                EditorUtility.SetDirty(Instance);
+                onComplete?.Invoke();
+            }, onError);
+        }
+
+        public static void FetchAll(Action onComplete, Action onError)
+        {
+            FetchLongLatData(() => FetchSunriseSunsetData(onComplete, onError), onError);
         }
     }
 }
