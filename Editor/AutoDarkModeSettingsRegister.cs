@@ -1,13 +1,12 @@
 using System.Collections.Generic;
 using UnityEditor;
-using UnityEngine;
 
 namespace Packages.AutoDarkMode
 {
     internal static class AutoDarkModeSettingsIMGUIRegister
     {
         [SettingsProvider]
-        public static SettingsProvider CreateMyCustomSettingsProvider()
+        public static SettingsProvider CreateAutoDarkModeSettingsProvider()
         {
             var provider = new SettingsProvider($"Project/{Constants.Name}", SettingsScope.User)
             {

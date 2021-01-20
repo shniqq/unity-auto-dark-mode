@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using UnityEditor;
 using UnityEngine;
 
@@ -42,9 +43,11 @@ namespace Packages.AutoDarkMode
 
         [SerializeField, HideInInspector]
         public Vector2 Geolocation;
+        [SerializeField, HideInInspector]
+        public string Location;
 
         [SerializeField, HideInInspector]
-        public bool AutoFetchSunriseSunsetTimes;
+        public bool AutoFetch;
         [SerializeField, HideInInspector]
         public int FetchTimeout = 10;
         [SerializeField, HideInInspector]
@@ -52,7 +55,7 @@ namespace Packages.AutoDarkMode
         public DateTime LastAutoFetchTime
         {
             get => DateTime.TryParse(_lastAutoFetchTime, out var value) ? value : default;
-            set => _lastAutoFetchTime = value.ToString();
+            set => _lastAutoFetchTime = value.ToString(CultureInfo.InvariantCulture);
         }
 
         public TimeSpan Sunrise => Convert.ToDateTime(_sunrise).TimeOfDay;
@@ -71,30 +74,9 @@ namespace Packages.AutoDarkMode
             var settings = GetSerializedSettings();
             EditorGUILayout.PropertyField(settings.FindProperty(nameof(EnableAutoDarkMode)),
                 new GUIContent("Enable Auto Dark Mode"));
+            EditorGUILayout.Space();
 
-            var autoFetchCoordinates = settings.FindProperty(nameof(AutoFetchSunriseSunsetTimes));
-            EditorGUILayout.LabelField(
-                "Automatically fetch Sunrise & Sunset time from a server based on longitude and latitude?");
-            EditorGUILayout.PropertyField(autoFetchCoordinates, new GUIContent("Auto Fetch"));
-
-            if (autoFetchCoordinates.boolValue)
-            {
-                EditorGUILayout.PropertyField(settings.FindProperty(nameof(Geolocation)),
-                    new GUIContent("Longitude/Latitude"));
-                EditorGUILayout.PropertyField(settings.FindProperty(nameof(FetchTimeout)),
-                    new GUIContent("Fetch Timeout"));
-
-                GUILayout.BeginHorizontal();
-                if (GUILayout.Button("Fetch Sunrise/Sunset times from API"))
-                {
-                    EditorUtility.DisplayProgressBar("Auto Dark Mode", "Fetching Sunrise/Sunset from API..", 0f);
-                    Action onError = EditorUtility.ClearProgressBar;
-                    FetchSunriseSunsetData(EditorUtility.ClearProgressBar, onError);
-                }
-
-                GUILayout.Label("Uses https://sunrise-sunset.org - thanks!");
-                GUILayout.EndHorizontal();
-            }
+            DrawAutoFetchUI(settings);
 
             EditorGUILayout.PropertyField(settings.FindProperty(nameof(_sunrise)), new GUIContent("Sunrise"));
             EditorGUILayout.PropertyField(settings.FindProperty(nameof(_sunset)), new GUIContent("Sunset"));
@@ -108,7 +90,48 @@ namespace Packages.AutoDarkMode
             }
         }
 
-        public static void FetchSunriseSunsetData(Action onComplete, Action onError)
+        private static void DrawAutoFetchUI(SerializedObject settings)
+        {
+            EditorGUI.indentLevel++;
+            GUILayout.BeginHorizontal();
+            var refreshIcon = EditorGUIUtility.IconContent("d_Refresh");
+            var fetchButtonContent = new GUIContent("Fetch now", refreshIcon.image,
+                "Fetches first the long/lat based on your IP, and then the sunrise and sunset based on the long/lat.");
+            if (GUILayout.Button(fetchButtonContent))
+            {
+                EditorUtility.DisplayProgressBar("Auto Dark Mode", "Fetching Location & Sunrise/Sunset from API..",
+                    0.25f);
+                Action onError = EditorUtility.ClearProgressBar;
+                FetchAll(EditorUtility.ClearProgressBar, onError);
+                AutoDarkMode.SetEditorTheme();
+            }
+
+            EditorGUILayout.PropertyField(settings.FindProperty(nameof(FetchTimeout)),
+                new GUIContent("Fetch Timeout"));
+            GUILayout.EndHorizontal();
+            
+            GUILayout.Box(
+                $"Uses {IpApi.ApiUrl} to fetch your approximate longitude and latitude based on your IP and {SunriseSunsetApi.ApiUrl} to fetch sunrise and sunset based on longitude and latitude.");
+            EditorGUILayout.Space();
+            
+            GUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField(
+                new GUIContent($"Rough Location: {settings.FindProperty(nameof(Location)).stringValue}"));
+            var geoLocation = settings.FindProperty(nameof(Geolocation)).vector2Value;
+            EditorGUILayout.LabelField(new GUIContent($"Longitude: {geoLocation.x} | Latitude: {geoLocation.y}"));
+            GUILayout.EndHorizontal();
+            EditorGUILayout.Space();
+            
+            var autoFetch = settings.FindProperty(nameof(AutoFetch));
+            GUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField("Auto fetch once a day?", GUILayout.ExpandWidth(true));
+            EditorGUILayout.PropertyField(autoFetch, GUIContent.none);
+            GUILayout.EndHorizontal();
+            
+            EditorGUI.indentLevel--;
+        }
+
+        private static void FetchSunriseSunsetData(Action onComplete, Action onError)
         {
             SunriseSunsetApi.FetchData(
                 Instance.Geolocation.x,
@@ -122,6 +145,22 @@ namespace Packages.AutoDarkMode
                     onComplete?.Invoke();
                 },
                 onError);
+        }
+
+        private static void FetchLongLatData(Action onComplete, Action onError)
+        {
+            IpApi.FetchData(Instance.FetchTimeout, (longitude, latitude, location) =>
+            {
+                Instance.Geolocation = new Vector2(longitude, latitude);
+                Instance.Location = location;
+                EditorUtility.SetDirty(Instance);
+                onComplete?.Invoke();
+            }, onError);
+        }
+
+        public static void FetchAll(Action onComplete, Action onError)
+        {
+            FetchLongLatData(() => FetchSunriseSunsetData(onComplete, onError), onError);
         }
     }
 }

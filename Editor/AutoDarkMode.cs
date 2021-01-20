@@ -27,33 +27,40 @@ namespace Packages.AutoDarkMode
                 return;
             }
 
-            if (settings.AutoFetchSunriseSunsetTimes)
+            if (settings.AutoFetch)
             {
                 var timeSinceLastFetch = DateTime.UtcNow - settings.LastAutoFetchTime;
                 if (timeSinceLastFetch > Constants.AutoFetchInterval)
                 {
-                    AutoDarkModeSettings.FetchSunriseSunsetData(
+                    AutoDarkModeSettings.FetchAll(
                         () =>
                         {
                             settings.LastAutoFetchTime = DateTime.UtcNow;
                             EditorUtility.SetDirty(AutoDarkModeSettings.Instance);
-                            SetEditorTheme(settings);
+                            SetEditorTheme();
                         },
-                        () => { }
+                        () =>
+                        {
+                            if (settings.ShowExtraLogs)
+                            {
+                                Debug.Log("Failed to auto-fetch.");
+                            }
+                        }
                     );
                 }
-                else if(settings.ShowExtraLogs)
+                else if (settings.ShowExtraLogs)
                 {
                     Debug.Log(
                         $"Skipping auto fetching sunrise/sunset data since time of last fetch is only {timeSinceLastFetch.ToString()}.");
                 }
             }
 
-            SetEditorTheme(settings);
+            SetEditorTheme();
         }
 
-        private static void SetEditorTheme(AutoDarkModeSettings settings)
+        public static void SetEditorTheme()
         {
+            var settings = AutoDarkModeSettings.Instance;
             var timeNowUtc = DateTime.UtcNow.TimeOfDay;
             var sunset = settings.Sunset;
             var sunrise = settings.Sunrise;
