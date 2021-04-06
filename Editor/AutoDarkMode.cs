@@ -129,20 +129,9 @@ namespace Packages.AutoDarkMode
             return (int) propertyInfo.GetMethod.Invoke(null, new object[] { });
         }
 
-        public static void ToggleSkin()
+        private static void ToggleSkin()
         {
-            const string internalSwitchSkinMethodName = "Internal_SwitchSkin";
-            var methodInfo =
-                typeof(EditorApplication).GetMethod(internalSwitchSkinMethodName,
-                    BindingFlags.Static | BindingFlags.NonPublic);
-            if (methodInfo is null)
-            {
-                Debug.LogError(
-                    $"Couldn't find method '{internalSwitchSkinMethodName}' in {nameof(EditorApplication)}.");
-                return;
-            }
-
-            methodInfo.Invoke(null, new object[] { });
+            InternalEditorUtility.SwitchSkinAndRepaintAllViews();
             SettingsService.NotifySettingsProviderChanged();
             EditorApplication.RepaintProjectWindow();
             if (AutoDarkModeSettings.Instance.ShowExtraLogs)
