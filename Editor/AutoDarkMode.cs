@@ -1,6 +1,7 @@
 using System;
 using System.Reflection;
 using UnityEditor;
+using UnityEditorInternal;
 using UnityEngine;
 
 namespace Packages.AutoDarkMode
@@ -12,6 +13,13 @@ namespace Packages.AutoDarkMode
 
         [InitializeOnLoadMethod]
         public static void OnInit()
+        {
+            PerformAutoDarkMode();
+
+            EditorApplication.projectChanged += PerformAutoDarkMode;
+        }
+
+        private static void PerformAutoDarkMode()
         {
             ShowWelcomeMessage();
 
@@ -51,7 +59,7 @@ namespace Packages.AutoDarkMode
                 else if (settings.ShowExtraLogs)
                 {
                     Debug.Log(
-                        $"Skipping auto fetching sunrise/sunset data since time of last fetch is only {timeSinceLastFetch.ToString()}.");
+                        $"Skipping auto fetching sunrise/sunset data since time of last fetch is only {timeSinceLastFetch.ToString()} old.");
                 }
             }
 
@@ -94,15 +102,18 @@ namespace Packages.AutoDarkMode
         {
             if (!AutoDarkModeSettings.Instance.HasSeenWelcomeMessage)
             {
-                EditorUtility.DisplayDialog("Auto Dark Mode",
-                    $"Thank you for using Auto Dark Mode!{Environment.NewLine}Head over to the settings window and configure Auto Dark Mode there.",
-                    "Let's go!");
                 AutoDarkModeSettings.Instance.HasSeenWelcomeMessage = true;
                 EditorUtility.SetDirty(AutoDarkModeSettings.Instance);
+                if (EditorUtility.DisplayDialog("Auto Dark Mode",
+                    $"Thank you for using Auto Dark Mode!{Environment.NewLine}Head over to the settings window and configure Auto Dark Mode there.",
+                    "Let's go!"))
+                {
+                    AutoDarkModeSettingsRegister.Open();
+                }
             }
         }
 
-        public static int GetCurrentSkinIndex()
+        private static int GetCurrentSkinIndex()
         {
             const string skinIndexPropertyName = "skinIndex";
             var propertyInfo =
@@ -118,20 +129,9 @@ namespace Packages.AutoDarkMode
             return (int) propertyInfo.GetMethod.Invoke(null, new object[] { });
         }
 
-        public static void ToggleSkin()
+        private static void ToggleSkin()
         {
-            const string internalSwitchSkinMethodName = "Internal_SwitchSkin";
-            var methodInfo =
-                typeof(EditorApplication).GetMethod(internalSwitchSkinMethodName,
-                    BindingFlags.Static | BindingFlags.NonPublic);
-            if (methodInfo is null)
-            {
-                Debug.LogError(
-                    $"Couldn't find method '{internalSwitchSkinMethodName}' in {nameof(EditorApplication)}.");
-                return;
-            }
-
-            methodInfo.Invoke(null, new object[] { });
+            InternalEditorUtility.SwitchSkinAndRepaintAllViews();
             SettingsService.NotifySettingsProviderChanged();
             EditorApplication.RepaintProjectWindow();
             if (AutoDarkModeSettings.Instance.ShowExtraLogs)

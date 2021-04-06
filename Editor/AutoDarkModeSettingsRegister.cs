@@ -3,12 +3,14 @@ using UnityEditor;
 
 namespace Packages.AutoDarkMode
 {
-    internal static class AutoDarkModeSettingsIMGUIRegister
+    internal static class AutoDarkModeSettingsRegister
     {
+        private static readonly string SettingsPath = $"Project/{Constants.Name}";
+        
         [SettingsProvider]
         public static SettingsProvider CreateAutoDarkModeSettingsProvider()
         {
-            var provider = new SettingsProvider($"Project/{Constants.Name}", SettingsScope.User)
+            var provider = new SettingsProvider(SettingsPath, SettingsScope.User)
             {
                 guiHandler = (searchContext) =>
                 {
@@ -18,6 +20,11 @@ namespace Packages.AutoDarkMode
             };
 
             return provider;
+        }
+
+        public static void Open()
+        {
+            SettingsService.OpenUserPreferences(SettingsPath);
         }
     }
 }

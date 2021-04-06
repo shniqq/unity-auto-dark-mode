@@ -47,7 +47,7 @@ namespace Packages.AutoDarkMode
         public string Location;
 
         [SerializeField, HideInInspector]
-        public bool AutoFetch;
+        public bool AutoFetch = true;
         [SerializeField, HideInInspector]
         public int FetchTimeout = 10;
         [SerializeField, HideInInspector]
@@ -60,11 +60,11 @@ namespace Packages.AutoDarkMode
 
         public TimeSpan Sunrise => Convert.ToDateTime(_sunrise).TimeOfDay;
         [SerializeField, HideInInspector]
-        private string _sunrise;
+        private string _sunrise = "07:00:00";
 
         public TimeSpan Sunset => Convert.ToDateTime(_sunset).TimeOfDay;
         [SerializeField, HideInInspector]
-        private string _sunset;
+        private string _sunset = "19:00:00";
 
         [SerializeField, HideInInspector]
         public bool ShowExtraLogs;
@@ -72,8 +72,17 @@ namespace Packages.AutoDarkMode
         public static void DrawSettings()
         {
             var settings = GetSerializedSettings();
-            EditorGUILayout.PropertyField(settings.FindProperty(nameof(EnableAutoDarkMode)),
-                new GUIContent("Enable Auto Dark Mode"));
+            var enableAutoDarkModeProperty = settings.FindProperty(nameof(EnableAutoDarkMode));
+            var isEnabled = enableAutoDarkModeProperty.boolValue;
+            EditorGUILayout.PropertyField(enableAutoDarkModeProperty, new GUIContent("Enable Auto Dark Mode"));
+            if (enableAutoDarkModeProperty.boolValue != isEnabled)
+            {
+                if (Instance.ShowExtraLogs)
+                {
+                    Debug.Log("AutoDarkMode enabled setting has changed! Trying to set skin..", Instance);
+                }
+                AutoDarkMode.SetEditorTheme();
+            }
             EditorGUILayout.Space();
 
             DrawAutoFetchUI(settings);
@@ -109,11 +118,11 @@ namespace Packages.AutoDarkMode
             EditorGUILayout.PropertyField(settings.FindProperty(nameof(FetchTimeout)),
                 new GUIContent("Fetch Timeout"));
             GUILayout.EndHorizontal();
-            
+
             GUILayout.Box(
                 $"Uses {IpApi.ApiUrl} to fetch your approximate longitude and latitude based on your IP and {SunriseSunsetApi.ApiUrl} to fetch sunrise and sunset based on longitude and latitude.");
             EditorGUILayout.Space();
-            
+
             GUILayout.BeginHorizontal();
             EditorGUILayout.LabelField(
                 new GUIContent($"Rough Location: {settings.FindProperty(nameof(Location)).stringValue}"));
@@ -121,13 +130,13 @@ namespace Packages.AutoDarkMode
             EditorGUILayout.LabelField(new GUIContent($"Longitude: {geoLocation.x} | Latitude: {geoLocation.y}"));
             GUILayout.EndHorizontal();
             EditorGUILayout.Space();
-            
+
             var autoFetch = settings.FindProperty(nameof(AutoFetch));
             GUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("Auto fetch once a day?", GUILayout.ExpandWidth(true));
             EditorGUILayout.PropertyField(autoFetch, GUIContent.none);
             GUILayout.EndHorizontal();
-            
+
             EditorGUI.indentLevel--;
         }
 
