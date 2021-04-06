@@ -37,7 +37,7 @@ If you notice anything else that might be wrong, file an [issue](https://github.
 * :white_check_mark: ~~A way to automatically detect the user's location (long/lat). A rough estimate should be just fine to get good-enough approximations for the sunrise & sunset times.~~
 * :white_check_mark: ~~Provide sensible default values for `Sunset` and `Sunrise` so the plugin works out of the box.~~
 * :white_check_mark: ~~[`InitializeOnLoadMethod`][1] mostly occurs when scripts change or the project launched, for non-programmers this might not happen often enough - maybe hook into Asset Database Reload somehow or something alike?~~
-* Automatically open Project Settings when plugin is added for the first time or provide a button in the welcome popup to go there.
+* :white_check_mark: ~~Automatically open Project Settings when plugin is added for the first time or provide a button in the welcome popup to go there.~~
 * Add option to invert the theme (light during the night, dark during the day). Not sure if this is something someone actually wants?
 
 **PRs are welcome!**
