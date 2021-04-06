@@ -1,5 +1,11 @@
 ![AutoDarkMode](ADM_Preferences_Screenshot.png)
 
+[![openupm](https://img.shields.io/npm/v/com.shniqq.auto-dark-mode?label=openupm&registry_uri=https://package.openupm.com)](https://openupm.com/packages/com.shniqq.auto-dark-mode/)
+
+## Installation
+* Download the source and add it either as a local package via the Package Manager or drop the source right into your project
+* Use [OpenUPM](https://openupm.com/packages/com.shniqq.auto-dark-mode/) to install it
+
 ## Requirements
 * Unity version 2020.1 or newer (last tested with 2020.3.1f1)
 * `Api Compatibility Level` needs to be `.NET 4.x` or `.NET Core 2.0`
